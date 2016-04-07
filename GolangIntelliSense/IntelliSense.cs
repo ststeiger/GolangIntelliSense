@@ -3,9 +3,63 @@ namespace GolangIntelliSense
 {
 
 
-
-    class MainClass
+    class IntelliSense
     {
+
+
+        public static void Test()
+        {
+            GetCompletion();
+        }
+
+
+        public static string MapGoRootPath(string path)
+        {
+            // GOROOT=/root/.gvm/gos/go1.6
+            string GOROOT = System.Environment.GetEnvironmentVariable("GOROOT");
+            return System.IO.Path.GetFullPath(System.IO.Path.Combine(GOROOT, path));
+        }
+
+        public static string MapGoPath(string path)
+        {
+            // GOPATH=/root/.gvm/pkgsets/go1.6/global
+            // C:\PortableApps\Go\bin
+            string GOPATH = System.Environment.GetEnvironmentVariable("GOPATH");
+            return System.IO.Path.GetFullPath(System.IO.Path.Combine(GOPATH, path));
+        }
+
+        public static string MapGoPathExecutable(string path)
+        {
+            // GOPATH=/root/.gvm/pkgsets/go1.6/global
+            // C:\PortableApps\Go\bin
+            string GOPATH = System.Environment.GetEnvironmentVariable("GOPATH");
+            path = System.IO.Path.GetFullPath(System.IO.Path.Combine(GOPATH, path));
+
+
+            string executableExtension = "";
+            if (System.Environment.OSVersion.Platform != System.PlatformID.Unix)
+                executableExtension = ".exe";
+
+            path += executableExtension;
+            return path;
+        }
+
+
+        public static string GetGoCodeExecutable()
+        {
+            // processStartInfo.FileName = "/root/.gvm/pkgsets/go1.6/global/src/github.com/nsf/gocode/gocode";
+            return MapGoPathExecutable("src/github.com/nsf/gocode/gocode");
+        }
+
+
+        public static string GetExampleSrcFile()
+        {
+            // string code = System.IO.File.ReadAllText(fileName, System.Text.Encoding.UTF8);
+
+            // string fileName = @"/root/.gvm/pkgsets/go1.6/global/src/github.com/b3log/wide/main.go";
+            // string fileName = @"C:\PortableApps\Go\bin\src\github.com\b3log\wide\main.go";
+            return MapGoPath("src/github.com/b3log/wide/main.go");
+        }
 
 
         public static string GetProcessOutput(string cmdLine)
@@ -22,7 +76,9 @@ namespace GolangIntelliSense
             processStartInfo.RedirectStandardInput = true;
             processStartInfo.UseShellExecute = false;
             processStartInfo.Arguments = cmdLine;
-            processStartInfo.FileName = "/root/.gvm/pkgsets/go1.6/global/src/github.com/nsf/gocode/gocode";
+            // processStartInfo.FileName = "/root/.gvm/pkgsets/go1.6/global/src/github.com/nsf/gocode/gocode";
+            processStartInfo.FileName = GetGoCodeExecutable();
+
 
             process = new System.Diagnostics.Process();
             process.StartInfo = processStartInfo;
@@ -92,8 +148,8 @@ namespace GolangIntelliSense
 
         public static void GetCompletion()
         {
-            string fn = @"/root/.gvm/pkgsets/go1.6/global/src/github.com/b3log/wide/main.go";
-            string code = System.IO.File.ReadAllText(fn, System.Text.Encoding.UTF8);
+            string fileName = GetExampleSrcFile();
+            string code = System.IO.File.ReadAllText(fileName, System.Text.Encoding.UTF8);
 
             int offset = GetOffset(code, 61, 6);
             // int pos = str.IndexOf("flag.Parse()");
@@ -101,7 +157,7 @@ namespace GolangIntelliSense
 
 
             // "./gocode 
-            string cmd = "-f=json --in=\"" + fn.Replace("\"", "\\\"") + "\" autocomplete " + offset.ToString();
+            string cmd = "-f=json --in=\"" + fileName.Replace("\"", "\\\"") + "\" autocomplete " + offset.ToString();
             System.Console.WriteLine(cmd);
 
 
@@ -123,14 +179,6 @@ namespace GolangIntelliSense
             strOut = strOut.Substring(0, pos);
             System.Console.WriteLine(strOut);
             //[0,
-        }
-
-
-        public static void MonoMain(string[] args)
-        {
-            GetCompletion();
-
-            System.Console.WriteLine("Hello World!");
         }
 
 
